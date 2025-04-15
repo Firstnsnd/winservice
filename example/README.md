@@ -1,5 +1,5 @@
 
-##📦 Requirements
+## 📦 Requirements
 - Operating System: Windows 10/11
 
 - Go Version: 1.18+
@@ -7,7 +7,7 @@
 - Git installed
 
 - (Optional) Visual Studio Code / GoLand for editing
-##🔧 Build
+## 🔧 Build
 Open a terminal in the example/ directory and run:
 
 ```cmd
