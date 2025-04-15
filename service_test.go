@@ -15,13 +15,13 @@ const (
 func TestFullServiceLifecycle(t *testing.T) {
 	require.True(t, IsAdmin(), "Test must be run as administrator")
 
-	exePath, err := os.Executable()
-	require.NoError(t, err)
-
-	// Use the current executable as the service target
+	exePath := filepath.Join("example", "TestWinSvc.exe")
 	exeAbsPath, err := filepath.Abs(exePath)
 	require.NoError(t, err)
 
+	// make sure file exist
+	_, err = os.Stat(exeAbsPath)
+	require.NoError(t, err, "Executable not found at: "+exeAbsPath)
 	// 1. Create the service
 	err = CreateService(testServiceName, exeAbsPath, true)
 	require.NoError(t, err, "Failed to create service")

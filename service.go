@@ -35,10 +35,19 @@ var (
 )
 
 const (
-	SERVICE_QUERY_STATUS = 0x0001
-	SERVICE_START        = 0x0010
-	SERVICE_STOP         = 0x0020
-	SERVICE_RUNNING      = 0x0004
+	SERVICE_QUERY_STATUS     uint32 = 0x0004
+	SERVICE_QUERY_CONFIG     uint32 = 0x0001
+	SERVICE_CHANGE_CONFIG    uint32 = 0x0002
+	SERVICE_START            uint32 = 0x0010
+	SERVICE_STOP             uint32 = 0x0020
+	SERVICE_ALL_ACCESS       uint32 = 0xF01FF
+	SERVICE_STOPPED          uint32 = 0x00000001
+	SERVICE_START_PENDING    uint32 = 0x00000002
+	SERVICE_STOP_PENDING     uint32 = 0x00000003
+	SERVICE_RUNNING          uint32 = 0x00000004
+	SERVICE_CONTINUE_PENDING uint32 = 0x00000005
+	SERVICE_PAUSE_PENDING    uint32 = 0x00000006
+	SERVICE_PAUSED           uint32 = 0x00000007
 
 	// Default timeout for service operations
 	defaultServiceTimeout = 10 * time.Second
@@ -55,7 +64,7 @@ type SERVICE_STATUS struct {
 	Win32ExitCode           uint32
 	ServiceSpecificExitCode uint32
 	CheckPoint              uint32
-	waitHint                uint32
+	WaitHint                uint32
 }
 
 // openSCManager opens a connection to the service control manager
@@ -238,7 +247,7 @@ func QueryServiceStatus(serviceName string) (uint32, error) {
 	}
 	defer windows.Close(scm)
 
-	service, err := openService(scm, serviceName, SERVICE_QUERY_STATUS)
+	service, err := openService(scm, serviceName, SERVICE_QUERY_STATUS|SERVICE_QUERY_CONFIG)
 	if err != nil {
 		return 0, err
 	}
