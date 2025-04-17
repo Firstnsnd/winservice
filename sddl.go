@@ -1,10 +1,14 @@
 package winservice
 
 import (
+	"errors"
 	"fmt"
+	"os"
+	"os/exec"
 	"unsafe"
 
 	"golang.org/x/sys/windows"
+	"golang.org/x/sys/windows/registry"
 	"golang.org/x/sys/windows/svc/mgr"
 )
 
