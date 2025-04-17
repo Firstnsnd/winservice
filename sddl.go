@@ -46,14 +46,20 @@ func IsServiceHidden(serviceName string) (bool, error) {
 		return true, nil
 	}
 
-	// 3. Use Get-Service to confirm if the service can be listed
-	cmd := exec.Command("powershell", "-Command", fmt.Sprintf("Get-Service -Name %s", serviceName))
-	err = cmd.Run()
+	// 3. Use Windows service manager to check if service can be opened
+	m, err := mgr.Connect()
 	if err != nil {
-		// If Get-Service fails, the service may be hidden
+		return false, fmt.Errorf("could not connect to service manager: %v", err)
+	}
+	defer m.Disconnect()
+
+	s, err := m.OpenService(serviceName)
+	if err != nil {
+		// OpenService if fail service may hidden or not exist
 		return true, nil
 	}
-
+	defer s.Close()
+	
 	// If DisplayName exists, ImagePath is valid, and the service can be listed by Get-Service, it is not hidden
 	return false, nil
 }
