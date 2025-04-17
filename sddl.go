@@ -13,6 +13,47 @@ const (
 	DACL_SECURITY_INFORMATION = 0x00000004
 )
 
+// IsServiceHidden check service is hidden
+func IsServiceHidden(serviceName string) (bool, error) {
+	// 1. Check if DisplayName exists in the registry
+	keyPath := `SYSTEM\CurrentControlSet\Services\` + serviceName
+	k, err := registry.OpenKey(registry.LOCAL_MACHINE, keyPath, registry.READ)
+	if err != nil {
+		return false, fmt.Errorf("could not open registry key for service %s: %v", serviceName, err)
+	}
+	defer k.Close()
+
+	// Check DisplayName
+	_, _, err = k.GetStringValue("DisplayName")
+	if errors.Is(err, registry.ErrNotExist) {
+		// If DisplayName is not found, the service may be hidden
+		return true, nil
+	}
+
+	// 2. Check if ImagePath is valid
+	imagePath, _, err := k.GetStringValue("ImagePath")
+	if err != nil {
+		return false, fmt.Errorf("could not get ImagePath for service %s: %v", serviceName, err)
+	}
+
+	// Check if the file pointed by ImagePath exists
+	if _, err := os.Stat(imagePath); os.IsNotExist(err) {
+		// If the file pointed by ImagePath does not exist, the service might be abnormal
+		return true, nil
+	}
+
+	// 3. Use Get-Service to confirm if the service can be listed
+	cmd := exec.Command("powershell", "-Command", fmt.Sprintf("Get-Service -Name %s", serviceName))
+	err = cmd.Run()
+	if err != nil {
+		// If Get-Service fails, the service may be hidden
+		return true, nil
+	}
+
+	// If DisplayName exists, ImagePath is valid, and the service can be listed by Get-Service, it is not hidden
+	return false, nil
+}
+
 // SetServiceHidden makes a service hidden from regular users
 func SetServiceHidden(serviceName string) error {
 	return setServiceSDDL(serviceName, hiddenServiceSDDL)
